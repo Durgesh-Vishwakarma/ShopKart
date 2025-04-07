@@ -15,13 +15,24 @@ import connectDB from './config/db.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 const port = process.env.PORT || 5000;
-
+const allowedOrigins = ['https://shop-kart-zeta.vercel.app'];
 // Connect to MongoDB
 connectDB();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('CORS not allowed for this origin'), false);
+    }
+  },
+  credentials: true
+}));
 app.use(compression());
 app.use(cookieParser());
 app.use(express.json());
