@@ -13,38 +13,28 @@ const addOrderItems = async (req, res, next) => {
       itemsPrice,
       taxPrice,
       shippingPrice,
-      totalPrice
+      totalPrice,
     } = req.body;
-    console.log(
-      cartItems,
-      shippingAddress,
-      paymentMethod,
-      itemsPrice,
-      taxPrice,
-      shippingPrice,
-      totalPrice
-    );
+
     if (!cartItems || cartItems.length === 0) {
-      res.statusCode = 400;
-      throw new Error('No order items.');
+      return res.status(400).json({ message: 'No order items provided.' });
     }
 
     const order = new Order({
       user: req.user._id,
-      orderItems: cartItems.map(item => ({
+      orderItems: cartItems.map((item) => ({
         ...item,
-        product: item._id
+        product: item._id,
       })),
       shippingAddress,
       paymentMethod,
       itemsPrice,
       taxPrice,
       shippingPrice,
-      totalPrice
+      totalPrice,
     });
 
     const createdOrder = await order.save();
-
     res.status(201).json(createdOrder);
   } catch (error) {
     next(error);
@@ -60,8 +50,7 @@ const getMyOrders = async (req, res, next) => {
     const orders = await Order.find({ user: req.user._id });
 
     if (!orders || orders.length === 0) {
-      res.statusCode = 404;
-      throw new Error('No orders found for the logged-in user.');
+      return res.status(404).json({ message: 'No orders found for the logged-in user.' });
     }
 
     res.status(200).json(orders);
@@ -81,8 +70,7 @@ const getOrderById = async (req, res, next) => {
     const order = await Order.findById(orderId).populate('user', 'name email');
 
     if (!order) {
-      res.statusCode = 404;
-      throw new Error('Order not found!');
+      return res.status(404).json({ message: 'Order not found!' });
     }
 
     res.status(200).json(order);
@@ -95,14 +83,13 @@ const getOrderById = async (req, res, next) => {
 // @method   PUT
 // @endpoint /api/v1/orders/:id/pay
 // @access   Private
-const updateOrderToPaid = async (req, res) => {
+const updateOrderToPaid = async (req, res, next) => {
   try {
     const { id: orderId } = req.params;
     const order = await Order.findById(orderId);
 
     if (!order) {
-      res.statusCode = 404;
-      throw new Error('Order not found!');
+      return res.status(404).json({ message: 'Order not found!' });
     }
 
     order.isPaid = true;
@@ -111,11 +98,10 @@ const updateOrderToPaid = async (req, res) => {
       id: req.body.id,
       status: req.body.status,
       update_time: req.body.updateTime,
-      email_address: req.body.email
+      email_address: req.body.email,
     };
 
     const updatedOrder = await order.save();
-
     res.status(200).json(updatedOrder);
   } catch (error) {
     next(error);
@@ -126,21 +112,19 @@ const updateOrderToPaid = async (req, res) => {
 // @method   PUT
 // @endpoint /api/v1/orders/:id/deliver
 // @access   Private/Admin
-const updateOrderToDeliver = async (req, res) => {
+const updateOrderToDeliver = async (req, res, next) => {
   try {
     const { id: orderId } = req.params;
     const order = await Order.findById(orderId);
 
     if (!order) {
-      res.statusCode = 404;
-      throw new Error('Order not found!');
+      return res.status(404).json({ message: 'Order not found!' });
     }
 
     order.isDelivered = true;
     order.deliveredAt = new Date();
 
     const updatedDeliver = await order.save();
-
     res.status(200).json(updatedDeliver);
   } catch (error) {
     next(error);
@@ -156,9 +140,9 @@ const getOrders = async (req, res, next) => {
     const orders = await Order.find().populate('user', 'id name');
 
     if (!orders || orders.length === 0) {
-      res.statusCode = 404;
-      throw new Error('Orders not found!');
+      return res.status(404).json({ message: 'No orders found!' });
     }
+
     res.status(200).json(orders);
   } catch (error) {
     next(error);
@@ -171,5 +155,5 @@ export {
   getOrderById,
   updateOrderToPaid,
   updateOrderToDeliver,
-  getOrders
+  getOrders,
 };

@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
+import axios from 'axios';
 
 const initialState = {
   userInfo: localStorage.getItem('userInfo')
@@ -17,6 +18,15 @@ const authSlice = createSlice({
     logout: (state, action) => {
       state.userInfo = null;
       localStorage.removeItem('userInfo');
+
+      // Call the backend logout endpoint
+      axios.post('/api/v1/logout', {}, { withCredentials: true })
+        .then(() => {
+          console.log('Logged out successfully');
+        })
+        .catch((error) => {
+          console.error('Logout failed:', error.response?.data?.message || error.message);
+        });
     }
   }
 });

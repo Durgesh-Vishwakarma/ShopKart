@@ -88,7 +88,11 @@ const registerUser = async (req, res, next) => {
 // @endpoint /api/users/logout
 // @access   Private
 const logoutUser = (req, res) => {
-  res.clearCookie("jwt", { httpOnly: true });
+  res.clearCookie("jwt", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "None",
+  });
 
   res.status(200).json({ message: "Logout successful" });
 };
@@ -268,22 +272,18 @@ const resetPasswordRequest = async (req, res, next) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      res.status(404);
-      throw new Error("User not found!");
+      return res.status(404).json({ message: "User not found!" });
     }
 
-    // Generate a JWT token for password reset
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: "15m",
     });
-    const passwordResetLink = `http://localhost:3000/reset-password/${user._id}/${token}`;
-    console.log(passwordResetLink);
+    const passwordResetLink = `${process.env.FRONTEND_URL}/reset-password/${user._id}/${token}`;
 
-    // Define the email details
     const sendSmtpEmail = {
       to: [{ email: user.email, name: user.name }],
       sender: {
-        email: process.env.EMAIL_FROM, // Must be verified in Brevo
+        email: process.env.EMAIL_FROM,
         name: "ShopKart",
       },
       subject: "Password Reset",
@@ -296,14 +296,12 @@ const resetPasswordRequest = async (req, res, next) => {
       `,
     };
 
-    // Send the email using the imported Brevo API client
     await transactionalEmailApi.sendTransacEmail(sendSmtpEmail);
 
     res.status(200).json({
       message: "Password reset email sent, please check your email.",
     });
   } catch (error) {
-    console.error("Error sending email:", error.message);
     next(error);
   }
 };

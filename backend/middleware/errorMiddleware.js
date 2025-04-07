@@ -9,11 +9,16 @@ const errorHandler = (err, req, res, next) => {
   res.status(statusCode);
 
   const responseBody = {
-    message: err.message,
-    stack: process.env.NODE_ENV === 'production' ? '🥞' : err.stack
+    success: false,
+    message: err.message || 'An unexpected error occurred',
+    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack }), // Include stack trace only in development
   };
 
-  console.error('Error: ', responseBody);
+  // Log the error (use a logging library in production)
+  if (process.env.NODE_ENV !== 'production') {
+    console.error('Error: ', responseBody);
+  }
+
   res.json(responseBody);
 };
 
