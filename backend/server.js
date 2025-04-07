@@ -21,11 +21,18 @@ connectDB();
 
 const app = express();
 app.use(cors({
-  origin: 'https://shop-kart-zeta.vercel.app',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // important!
-  allowedHeaders: ['Content-Type', 'Authorization'],    // also important!
+  origin: ['https://shop-kart-zeta.vercel.app'], // Allow requests from your frontend
+  credentials: true, // Allow cookies and credentials
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allow specific HTTP methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Allow specific headers
 }));
+
+app.use((req, res, next) => {
+  console.log(`Request Origin: ${req.headers.origin}`);
+  next();
+});
+
+
 app.use(compression());
 app.use(cookieParser());
 app.use(express.json());
